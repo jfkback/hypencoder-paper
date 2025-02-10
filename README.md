@@ -1,5 +1,5 @@
 # Hypencoder
-Official Repository for "Hypencoder: Hypernetworks for Information Retrieval"
+Official Repository for "Hypencoder: Hypernetworks for Information Retrieval". Code coming soon.
 
 ![main_image](./imgs/main_figure.jpg)
 
@@ -8,8 +8,8 @@ Official Repository for "Hypencoder: Hypernetworks for Information Retrieval"
         <a href=#installation>Installation</a> |
         <a href=#quick-start>Quick Start</a> |
         <a href="">Paper</a> |
-        <a href=#model-list>Model List</a> |
-        <a href="#cite">Citation</a> 
+        <a href=#models>Models</a> |
+        <a href="#cite">Citation</a>
     <p>
 </h4>
 
@@ -19,7 +19,7 @@ Official Repository for "Hypencoder: Hypernetworks for Information Retrieval"
 ## Quick Start
 
 
-## Model List
+## Models
 
 
 ## Citation
