@@ -1,5 +1,24 @@
 # Hypencoder
-Official Repository for "Hypencoder: Hypernetworks for Information Retrieval". Current code includes the Hypencoder model, retrieval code, inference code, and evaluation code. This repo is a work-in-progress; more comprehensive documentation, guides, model checkpoints, etc., will be coming soon. Additionally, code for training and approximate search will be coming soon. This code is a refactor of the original code and hasn't been thoroughly tested at this point, so please be aware there may be bugs or other issues that will be resolved in the next few days. 
+Official Repository for "Hypencoder: Hypernetworks for Information Retrieval".
+
+🚨 This repo is currently a work-in-progress 🚨
+
+Todos:
+- [x] Publish core modeling code.
+- [x] Publish inference, retrieval, and evaluation code.
+- [x] Confirm that inference, retrieval, and evaluation code work correctly.
+- [x] Upload Hypencoder checkpoints.
+- [x] Write instillation and quick start guides.
+- [x] Write replication commands for in-domain and out-of-domain results.
+- [ ] Add training files and configs used for training.
+- [ ] Upload all training data.
+- [ ] Upload BE-Base checkpoint.
+- [ ] Add retrieval functionality for bi-encoders.
+- [ ] Add additional files used for harder retrieval tasks.
+- [ ] Add run files for all evaluation datasets.
+- [ ] Add code for approximate search.
+- [ ] Upload passage embeddings for MSMARCO.
+
 
 ![main_image](./imgs/main_figure.jpg)
 
@@ -28,6 +47,7 @@ pip install -e /hypencoder-paper
 The core libraries required are:
 - `torch`
 - `transformers`
+
 with just the core libraries you can use Hypencoder to create q-nets and
 document embeddings.
 
