@@ -4,7 +4,7 @@ from typing import Callable, Optional
 import torch
 import torch.nn as nn
 
-from hypencoder_cb.modeling.hypencoder import EncoderOutput
+from hypencoder_cb.modeling.shared import EncoderOutput
 
 
 def pos_neg_triplets_from_similarity(similarity: torch.Tensor) -> torch.Tensor:
