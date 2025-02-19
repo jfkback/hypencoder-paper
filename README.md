@@ -10,14 +10,17 @@ Todos:
 - [x] Upload Hypencoder checkpoints.
 - [x] Write instillation and quick start guides.
 - [x] Write replication commands for in-domain and out-of-domain results.
-- [ ] Add training files and configs used for training.
-- [ ] Upload all training data.
+- [x] Add code for approximate search.
+- [x] Add training files and configs used for training.
+- [x] Upload MSMARCO training data.
+- [x] Upload passage embeddings for MSMARCO.
+- [ ] Check training code works as expected
+- [ ] Check approximate retrieval code works as expected
+- [ ] Upload training data for tip-of-the-tongue and instruction retrieval.
 - [ ] Upload BE-Base checkpoint.
 - [ ] Add retrieval functionality for bi-encoders.
-- [ ] Add additional files used for harder retrieval tasks.
+- [ ] Add additional code used for harder retrieval tasks.
 - [ ] Add run files for all evaluation datasets.
-- [ ] Add code for approximate search.
-- [ ] Upload passage embeddings for MSMARCO.
 
 
 ![main_image](./imgs/main_figure.jpg)
@@ -28,6 +31,9 @@ Todos:
         <a href=#quick-start>Quick Start</a> |
         <a href="https://arxiv.org/pdf/2502.05364">Paper</a> |
         <a href=#models>Models</a> |
+        <a href=#data>Data</a> |
+        <a href=#artifacts>Artifacts</a> |
+        <a href=#collaboration>Collaboration</a> |
         <a href="#cite">Citation</a>
     <p>
 </h4>
@@ -61,6 +67,10 @@ are required:
 - `numpy`
 - `ir_measures`
 
+To train a model you will need:
+- `fire`
+- `omegaconf`
+- `datasets`
 
 ## Quick Start
 #### Using the pretrained Hypencoders as stand-alone models
@@ -183,7 +193,7 @@ return a callable object which excepts a torch tensor in the shape (num_queries,
 
 
 ## Models
-We have uploaded the models from our paper experiments to Huggingface Hub. See quick start for more information on how to use these models.
+We have uploaded the models from our experiments to Huggingface Hub. See quick start for more information on how to use these models and our paper for more information on how they were trained.
 <center>
 
 | Huggingface Repo | Number of Layers |
@@ -193,6 +203,32 @@ We have uploaded the models from our paper experiments to Huggingface Hub. See q
 | [jfkback/hypencoder.6_layer](https://huggingface.co/jfkback/hypencoder.6_layer) |          6        |
 | [jfkback/hypencoder.8_layer](https://huggingface.co/jfkback/hypencoder.8_layer) |          8        |
 </center>
+
+
+## Data
+The data used for our experiments is in the table below:
+<center>
+
+| Link | Description |
+|:------------------:|------------------|
+| [jfkback/hypencoder-msmarco-training-dataset](https://huggingface.co/datasets/jfkback/hypencoder-msmarco-training-dataset) | Main training data used to train all our Hypencoder models and BE-base |
+</center>
+
+## Artifacts
+The artifacts from our experiments are in the table below:
+<center>
+
+| Link | Description |
+|:------------------:|------------------|
+| [hypencoder.6_layer.encoded_items](https://drive.google.com/drive/folders/1htoVx8fAVm-4ZfdssAXdw-_D-Kzs59dx?usp=sharing) | 6 layer Hypencoder embeddings for MSMARCO passage |
+| [hypencoder.6_layer.neighbor_graph](https://drive.google.com/file/d/1EhKuGxaFI51DDSDqsoAwiYRs1IdZATrk/view?usp=sharing) | 6 Layer Hypencoder passage neighbor  graph for MSMARCO passages - needed for approximate search. |
+</center>
+
+The above artifacts are stored on Google Drive, if you want to download them without going through the UI, I suggest looking at [gdown](https://github.com/wkentaro/gdown) or the Google Cloud interface provided by [rclone](https://rclone.org/drive).
+
+## Collaboration
+If you are interested in working on new projects around Hypencoder or other areas of Information Retrieval/NLP and would like to collaborate feel welcome to reach out via [email](jkillingback@umass.edu) or [X](https://x.com/Julian_a42f9a):
+
 
 ## Citation
 ```

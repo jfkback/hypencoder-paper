@@ -29,16 +29,17 @@ from hypencoder_cb.utils.torch_utils import dtype_lookup
 
 
 class HypencoderRetriever(BaseRetriever):
+
     def __init__(
         self,
         model_name_or_path: str,
         encoded_item_path: str,
-        batch_size: int = 32,
+        batch_size: int = 100_000,
         device: str = "cuda",
         dtype: Union[torch.dtype, str] = "float32",
         query_model_kwargs: Optional[Dict] = None,
         put_all_embeddings_on_device: bool = True,
-        query_max_length: int = 100_000,
+        query_max_length: int = 32,
         ignore_same_id: bool = False,
     ) -> None:
         """
@@ -238,6 +239,112 @@ def do_eval_and_pretty_print(
     print(f"Metrics saved to {output_dir}")
 
 
+def do_retrieval_shared(
+    retriever_cls,
+    retriever_kwargs: Dict,
+    output_dir: str,
+    ir_dataset_name: Optional[str] = None,
+    query_jsonl: Optional[str] = None,
+    qrel_json: Optional[str] = None,
+    query_id_key: str = "id",
+    query_text_key: str = "text",
+    top_k: int = 1000,
+    include_content: bool = True,
+    do_eval: bool = True,
+    metric_names: Optional[List[str]] = None,
+) -> None:
+    """Does retrieval and optionally evaluation.
+
+    Args:
+        retriever_cls (BaseRetriever): The retriever class to use.
+        retriever_kwargs (Dict): The keyword arguments to pass to the retriever.
+        output_dir (str): Path to the output directory which will contain the
+            retrieval results and optionally the evaluation results.
+        ir_dataset_name (Optional[str], optional): If provided is used to
+            get the queries used for retrieval and qrels used for evaluation.
+            If None, then `query_jsonl` must be provided and `qrel_json` must
+            be provided if `do_eval` is True. Defaults to None.
+        query_jsonl (Optional[str], optional): If provided is used as the
+            queries for retrieval. If None, then `ir_dataset_name` must
+            be provided. Defaults to None.
+        qrel_json (Optional[str], optional): If provided is used as the qrels
+            for evaluation. If None, then `ir_dataset_name` must
+            be provided. Defaults to None.
+        query_id_key (str, optional): The key in `query_jsonl` for the
+            query ID. Not used if `ir_dataset_name` is provided. Defaults to
+            "id".
+        query_text_key (str, optional): The key in `query_jsonl` for the
+            query text. Not used if `ir_dataset_name` is provided. Defaults to
+            "text".
+        top_k (int, optional): The number of top items to retrieve. Defaults to
+            1000.
+        retriever_kwargs (Optional[Dict], optional): Additional keyword
+            arguments to pass to the retriever. Defaults to None.
+        include_content (bool, optional): Whether to include the content of the
+            retrieved items in the output. Defaults to True.
+        do_eval (bool, optional): Whether to do evaluation. Defaults to True.
+        metric_names (Optional[List[str]], optional): A list of metrics to
+            compute. These are passed to IR-Measures so should be compatible.
+            If None, a default set of metrics is found. Defaults to None.
+    Raises:
+        ValueError: If both `query_jsonl` and `ir_dataset_name` are provided.
+        ValueError: If `do_eval` is True and `ir_dataset_name` is None and
+            `qrel_json` is None.
+    """
+
+    if query_jsonl is not None and ir_dataset_name is not None:
+        raise ValueError(
+            "Only one of query_jsonl and ir_dataset_name can be provided."
+        )
+
+    if query_jsonl is not None and do_eval and qrel_json is None:
+        raise ValueError(
+            "If do_eval is True and ir_dataset_name is None,"
+            " qrel_json must be provided."
+        )
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    retrieval_file = output_dir / "retrieved_items.jsonl"
+    metric_dir = output_dir / "metrics"
+
+    retriever = retriever_cls(
+        **retriever_kwargs
+    )
+
+    if query_jsonl is not None:
+        retrieve_for_jsonl_queries(
+            retriever=retriever,
+            query_jsonl=query_jsonl,
+            output_path=retrieval_file,
+            top_k=top_k,
+            include_content=include_content,
+            include_type=include_content,
+            query_id_key=query_id_key,
+            query_text_key=query_text_key,
+        )
+    else:
+        retrieve_for_ir_dataset_queries(
+            retriever=retriever,
+            ir_dataset_name=ir_dataset_name,
+            output_path=retrieval_file,
+            top_k=top_k,
+            include_content=include_content,
+            include_type=include_content,
+            track_time=True,
+        )
+
+    if do_eval:
+        do_eval_and_pretty_print(
+            ir_dataset_name=ir_dataset_name,
+            qrel_json=qrel_json,
+            retrieval_path=retrieval_file,
+            output_dir=metric_dir,
+            metric_names=metric_names,
+        )
+
+
 def do_retrieval(
     model_name_or_path: str,
     encoded_item_path: str,
@@ -307,66 +414,30 @@ def do_retrieval(
             `qrel_json` is None.
     """
 
-    if query_jsonl is not None and ir_dataset_name is not None:
-        raise ValueError(
-            "Only one of query_jsonl and ir_dataset_name can be provided."
-        )
+    retriever_kwargs = retriever_kwargs if retriever_kwargs is not None else {}
 
-    if query_jsonl is not None and do_eval and qrel_json is None:
-        raise ValueError(
-            "If do_eval is True and ir_dataset_name is None,"
-            " qrel_json must be provided."
-        )
-
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    retrieval_file = output_dir / "retrieved_items.jsonl"
-    metric_dir = output_dir / "metrics"
-
-    kwargs = retriever_kwargs if retriever_kwargs is not None else {}
-
-    # TODO add standard retriever also
-    retriever = HypencoderRetriever(
-        model_name_or_path=model_name_or_path,
-        encoded_item_path=encoded_item_path,
-        batch_size=batch_size,
-        dtype=dtype,
-        query_max_length=query_max_length,
-        ignore_same_id=ignore_same_id,
-        **kwargs,
+    do_retrieval_shared(
+        retriever_cls=HypencoderRetriever,
+        retriever_kwargs=dict(
+            model_name_or_path=model_name_or_path,
+            encoded_item_path=encoded_item_path,
+            dtype=dtype,
+            batch_size=batch_size,
+            query_max_length=query_max_length,
+            ignore_same_id=ignore_same_id,
+            **retriever_kwargs,
+        ),
+        output_dir=output_dir,
+        ir_dataset_name=ir_dataset_name,
+        query_jsonl=query_jsonl,
+        qrel_json=qrel_json,
+        query_id_key=query_id_key,
+        query_text_key=query_text_key,
+        top_k=top_k,
+        include_content=include_content,
+        do_eval=do_eval,
+        metric_names=metric_names,
     )
-
-    if query_jsonl is not None:
-        retrieve_for_jsonl_queries(
-            retriever=retriever,
-            query_jsonl=query_jsonl,
-            output_path=retrieval_file,
-            top_k=top_k,
-            include_content=include_content,
-            include_type=include_content,
-            query_id_key=query_id_key,
-            query_text_key=query_text_key,
-        )
-    else:
-        retrieve_for_ir_dataset_queries(
-            retriever=retriever,
-            ir_dataset_name=ir_dataset_name,
-            output_path=retrieval_file,
-            top_k=top_k,
-            include_content=include_content,
-            include_type=include_content,
-            track_time=True,
-        )
-
-    if do_eval:
-        do_eval_and_pretty_print(
-            ir_dataset_name=ir_dataset_name,
-            qrel_json=qrel_json,
-            retrieval_path=retrieval_file,
-            output_dir=metric_dir,
-            metric_names=metric_names,
-        )
 
 
 if __name__ == "__main__":

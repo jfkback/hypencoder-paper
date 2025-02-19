@@ -1,0 +1,74 @@
+model_config:
+  tokenizer_pretrained_model_name_or_path: google-bert/bert-base-uncased
+  query_encoder_kwargs:
+    model_name_or_path: google-bert/bert-base-uncased
+    freeze_transformer: false
+    embedding_representation: null
+    base_encoder_output_dim: 768
+    converter_kwargs:
+      vector_dimensions: [768, 768, 768, 768, 768, 768, 768, 1]
+      activation_type: relu
+      do_residual_on_last: false
+  passage_encoder_kwargs:
+    model_name_or_path: google-bert/bert-base-uncased
+    freeze_transformer: false
+    pooling_type: cls
+  shared_encoder: true
+  loss_type:
+    - margin_mse
+    - cross_entropy
+  loss_kwargs:
+    - {}
+    - {"use_in_batch_negatives": true, "only_use_first_item": true}
+data_config:
+  training_data_jsonl: .../hypencoder/data/train.jsonl
+  validation_data_jsonl: null
+  positive_filter_type: first
+  label_key: score
+  num_positives_to_sample: 1
+  num_negatives_to_sample: 7
+trainer_config:
+  hf_trainer_config:
+    output_dir: .../hypencoder/hypencoder.6_layer
+    overwrite_output_dir: false
+    remove_unused_columns: false
+    evaluation_strategy: 'no'
+    per_device_train_batch_size: 64
+    per_device_eval_batch_size: 64
+    gradient_accumulation_steps: 1
+    dataloader_prefetch_factor: 5
+    dataloader_num_workers: 1
+    dataloader_persistent_workers: false
+    learning_rate: 2.0e-05
+    weight_decay: 0.0
+    num_train_epochs: 1
+    lr_scheduler_type: constant_with_warmup
+    warmup_ratio: 0.0
+    warmup_steps: 6000
+    logging_strategy: steps
+    logging_steps: 10
+    max_steps: 1000000
+    save_strategy: steps
+    save_steps: 2500
+    save_total_limit: null
+    save_only_model: false
+    bf16: true
+    tf32: true
+    fp16: false
+    run_name: "hypencoder.6_layer"
+    disable_tqdm: true
+    ddp_find_unused_parameters: true
+    fsdp: false
+    fsdp_config: null
+    report_to: none
+    push_to_hub: false
+    hub_model_id: null
+    hub_strategy: every_save
+    hub_private_repo: true
+    gradient_checkpointing: false
+    save_safetensors: false
+    adam_beta1: 0.9
+    adam_beta2: 0.999
+    adam_epsilon: 1.0e-08
+    torch_compile: false
+  resume_from_checkpoint: true
